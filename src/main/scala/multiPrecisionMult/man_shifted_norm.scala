@@ -34,9 +34,9 @@ class man_shifted_norm(expWidthFp64: Int=11, manWidthFp64: Int=52, expWidthFp32:
 	// 单精度浮点数尾数相乘的结果是48bit，包含了2bit整数位，右移时，仅对48bit中的高32bit进行右移处理
 	// 所以，如果 sp1_r_shift_out 的MSB如果是1，则表明sp1没有进行任何右移，否则该bit一定为0；所以此时sp1的尾数右移结果归一化后就是 sp1_r_shift_out 本身
 	// 如果 sp1_r_shift_out 的MSB为0，则表示去掉最高位，在最低位后面补1个0
-	val sp1_r_shift_norm = Mux(sp1_r_shift_out((1 << log2Ceil(manWidthFp64))-1),
+	val sp1_r_shift_norm = Mux(sp1_r_shift_out((1 << log2Ceil(manWidthFp64))/2-1),
 											 sp1_r_shift_out,
-											 Cat(sp1_r_shift_out((1 << log2Ceil(manWidthFp64))-2, 0), 0.U(1.W))
+											 Cat(sp1_r_shift_out((1 << log2Ceil(manWidthFp64))/2-2, 0), 0.U(1.W))
 											 )
 	// sp1左移结果的处理
 	// 左移时，使用了尾数相乘结果的48bit的所有bit位
@@ -52,9 +52,9 @@ class man_shifted_norm(expWidthFp64: Int=11, manWidthFp64: Int=52, expWidthFp32:
 	val sp2_r_shift_out = io.r_shift_out_stage2((1 << log2Ceil(manWidthFp64))-1, (1 << log2Ceil(manWidthFp64))/2)
 	val sp2_l_shift_out = io.l_shift_out_stage2((manWidthFp64*2+2)-1, (manWidthFp64*2+2)/2)
 	// sp2 右移结果的处理
-	val sp2_r_shift_norm = Mux(sp2_r_shift_out((1 << log2Ceil(manWidthFp64))-1),
+	val sp2_r_shift_norm = Mux(sp2_r_shift_out((1 << log2Ceil(manWidthFp64))/2-1),
 							   sp2_r_shift_out,
-							   Cat(sp2_r_shift_out((1 << log2Ceil(manWidthFp64))-2, 0), 0.U(1.W))
+							   Cat(sp2_r_shift_out((1 << log2Ceil(manWidthFp64))/2-2, 0), 0.U(1.W))
 							  )
 
 	// sp2左移结果的处理
@@ -89,4 +89,11 @@ val dp_shift_norm = Mux(r_shift_dp_sp2_chk_dly, dp_r_shift_norm, dp_l_shift_norm
 io.dp_shift_norm_stage2 := Mux(io.mode, dp_shift_norm, 0.U)
 io.sp1_shift_norm_stage2 := Mux(io.mode, 0.U, sp1_shift_norm)
 io.sp2_shift_norm_stage2 := Mux(io.mode, 0.U, sp2_shift_norm)
+}
+
+object man_shifted_norm extends App {
+  ChiselStage.emitSystemVerilogFile(
+    new man_shifted_norm(),
+    firtoolOpts = Array("-disable-all-randomization", "-strip-debug-info")
+  )
 }

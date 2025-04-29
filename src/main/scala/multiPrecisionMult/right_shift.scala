@@ -21,7 +21,7 @@ class right_shift(expWidthFp64: Int=11, manWidthFp64: Int=52, expWidthFp32: Int=
 		val sp2_man_mult_stage1 = Input(UInt(((manWidthFp32+1)*2).W))
 
 		//右移的结果
-		val r_shift_out = Output(UInt((1 << log2Ceil(manWidthFp64)).W))
+		val r_shift_out_stage2 = Output(UInt((1 << log2Ceil(manWidthFp64)).W))
 
 		// 尾数相乘的延迟后的输出
 		val dp_man_mult_stage2 = Output(UInt(((manWidthFp64+1)*2).W))
@@ -46,9 +46,9 @@ class right_shift(expWidthFp64: Int=11, manWidthFp64: Int=52, expWidthFp32: Int=
 	val test_p = ((manWidthFp64+1)*2)- (1 << log2Ceil(manWidthFp64))
 	val hi = ((manWidthFp64+1)*2)-1
 	val lo = ((manWidthFp64+1)*2)- (1 << log2Ceil(manWidthFp64)) 
-	println("test_p = " + test_p)
-	println("hi = " + hi)
-	println("lo = " + lo)
+	// println("test_p = " + test_p)
+	// println("hi = " + hi)
+	// println("lo = " + lo)
 	val r_shift_in = Mux(io.mode,
 						dp_man_mult_stage2_tmp(  (((manWidthFp64+1)*2)-1) , (((manWidthFp64+1)*2) - (1 << log2Ceil(manWidthFp64)))  ),
 						Cat(sp2_man_mult_stage2_tmp( ((manWidthFp32+1)*2)-1, (manWidthFp32+1)*2- (1 << log2Ceil(manWidthFp32)) ), sp1_man_mult_stage2_tmp( ((manWidthFp32+1)*2)-1 , (manWidthFp32+1)*2- (1<<log2Ceil(manWidthFp32)) ))
@@ -94,7 +94,7 @@ class right_shift(expWidthFp64: Int=11, manWidthFp64: Int=52, expWidthFp32: Int=
 			lr_shift_subs(i).io.dp_shift_en := io.r_shift_dp_stage2(i)
 			lr_shift_subs(i).io.sp2_shift_en := io.r_shift_sp2_stage2(i)
 			lr_shift_subs(i).io.sp1_shift_en := io.r_shift_sp1_stage2(i)
-			io.r_shift_out := lr_shift_subs(i).io.shift_out
+			io.r_shift_out_stage2 := lr_shift_subs(i).io.shift_out
 		} else {
 			lr_shift_subs(i).io.mode := io.mode
 			lr_shift_subs(i).io.shift_in := r_shift_out_tmp(i)

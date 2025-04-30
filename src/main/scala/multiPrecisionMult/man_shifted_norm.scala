@@ -18,9 +18,10 @@ class man_shifted_norm(expWidthFp64: Int=11, manWidthFp64: Int=52, expWidthFp32:
 		val r_shift_dp_sp2_chk_stage1 = Input(Bool())
 		val r_shift_sp1_chk_stage1 = Input(Bool())
 
-		val sp1_shift_norm_stage2 = Output(UInt(sp_norm_width.W))
-		val sp2_shift_norm_stage2 = Output(UInt(sp_norm_width.W))
-		val dp_shift_norm_stage2  = Output(UInt(dp_norm_width.W))
+		// val sp1_shift_norm_stage2 = Output(UInt(sp_norm_width.W))
+		// val sp2_shift_norm_stage2 = Output(UInt(sp_norm_width.W))
+		// val dp_shift_norm_stage2  = Output(UInt(dp_norm_width.W))
+		val man_shifted_norm_stage2 = Output(UInt(dp_norm_width.W))
 	})
 
 	val r_shift_dp_sp2_chk_dly = RegNext(io.r_shift_dp_sp2_chk_stage1)
@@ -40,7 +41,10 @@ class man_shifted_norm(expWidthFp64: Int=11, manWidthFp64: Int=52, expWidthFp32:
 											 )
 	// sp1左移结果的处理
 	// 左移时，使用了尾数相乘结果的48bit的所有bit位
-	// 左移同理，只不过由于左移时使用了所有的48bit位，所以当sp1_l_shift_out的MSB为0时不是补0，而是直接取下一位
+	// 左移同理，只不过由于左移时使用了所有的48bit位，所以当sp1_l_shift_out的MSB为0时不是在末尾补0，而是直接取下一位
+	// MSB为0时，有两种情况，一是尾数中的2bit整数位为2'b01，LOD此时判断不需要左移，所以此时尾数应该去掉为0的MSB
+	// 二是左移的位数不足以让MSB变为1，例如尾数为为b00_0010....,其中最高两位为整数位 此时，LOD输出为3，但是由于left_shift_update的限制，导致最终左移位数为1，变为00_010....
+	// 此时应该去掉MSB
 	val sp1_l_shift_norm = Mux(sp1_l_shift_out((manWidthFp64*2+2)/2-1),
 											 sp1_l_shift_out((manWidthFp64*2+2)/2-1, (manWidthFp64*2+2)/2-sp_norm_width),
 											 sp1_l_shift_out((manWidthFp64*2+2)/2-2, (manWidthFp64*2+2)/2-sp_norm_width-1),
@@ -86,9 +90,7 @@ val dp_l_shift_norm = Mux(dp_l_shift_out((manWidthFp64*2+2)-1),
 val dp_shift_norm = Mux(r_shift_dp_sp2_chk_dly, dp_r_shift_norm, dp_l_shift_norm)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-io.dp_shift_norm_stage2 := Mux(io.mode, dp_shift_norm, 0.U)
-io.sp1_shift_norm_stage2 := Mux(io.mode, 0.U, sp1_shift_norm)
-io.sp2_shift_norm_stage2 := Mux(io.mode, 0.U, sp2_shift_norm)
+io.man_shifted_norm_stage2 := Mux(io.mode, dp_shift_norm, Cat(sp2_shift_norm, sp1_shift_norm))
 }
 
 object man_shifted_norm extends App {

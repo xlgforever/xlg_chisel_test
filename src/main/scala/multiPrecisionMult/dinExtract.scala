@@ -9,6 +9,7 @@ class dinExtract(expWidthFp64: Int=11, manWidthFp64: Int=52, expWidthFp32: Int=8
   val io = FlatIO(new Bundle {
 	val a = Input(new fp_number(expWidthFp64, manWidthFp64))
 	val b = Input(new fp_number(expWidthFp64, manWidthFp64))
+	
 	val a_sp1_s = Output(Bool())
 	val b_sp1_s = Output(Bool())
 	val a_sp1_e = Output(UInt(expWidthFp32.W))

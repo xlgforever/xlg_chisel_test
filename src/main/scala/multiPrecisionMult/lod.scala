@@ -78,7 +78,7 @@ class lod (expWidthFp64: Int=11, manWidthFp64: Int=52, expWidthFp32: Int=8, manW
   val lodHalf = lodInputWidth / 2
 
   val io = FlatIO(new Bundle{
-    val mode_sel = Input(Bool())
+    val mode = Input(Bool())
 
     val dp_man_mult_stage1 = Input(UInt(((manWidthFp64+1)*2).W))
     val sp1_man_mult_stage1 = Input(UInt(((manWidthFp32+1)*2).W))
@@ -90,7 +90,7 @@ class lod (expWidthFp64: Int=11, manWidthFp64: Int=52, expWidthFp32: Int=8, manW
   })
 
 
-  val lod_in = Mux(io.mode_sel,
+  val lod_in = Mux(io.mode,
                   Cat(io.dp_man_mult_stage1(((manWidthFp64+1)*2)-1, ((manWidthFp64+1)*2)-2).orR, io.dp_man_mult_stage1(((manWidthFp64+1)*2)-3, ((manWidthFp64+1)*2)-3-manWidthFp64+1), 0.U((lodInputWidth-manWidthFp64-1).W)),
                   Cat(io.sp2_man_mult_stage1(((manWidthFp32+1)*2)-1, ((manWidthFp32+1)*2)-2).orR, io.sp2_man_mult_stage1(((manWidthFp32+1)*2)-3, ((manWidthFp32+1)*2)-3-manWidthFp32+1), 0.U((lodHalf-manWidthFp32-1).W), io.sp1_man_mult_stage1(((manWidthFp32+1)*2)-1, ((manWidthFp32+1)*2)-2).orR, io.sp1_man_mult_stage1(((manWidthFp32+1)*2)-3, ((manWidthFp32+1)*2)-3-manWidthFp32+1),0.U((lodHalf-manWidthFp32-1).W) )
                   )
